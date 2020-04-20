@@ -11,19 +11,21 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #include <windows.h>
 #endif
-#include <GL/glew.h>		
-#include <GL/freeglut.h>	
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 #endif
 
 const unsigned int windowWidth = 600, windowHeight = 600;
 
 int majorVersion = 3, minorVersion = 3;
 
-void getErrorInfo(unsigned int handle) {
+void getErrorInfo(unsigned int handle)
+{
 	int logLen;
 	glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &logLen);
-	if (logLen > 0) {
-		char * log = new char[logLen];
+	if (logLen > 0)
+	{
+		char *log = new char[logLen];
 		int written;
 		glGetShaderInfoLog(handle, logLen, &written, log);
 		printf("Shader log:\n%s", log);
@@ -31,25 +33,29 @@ void getErrorInfo(unsigned int handle) {
 	}
 }
 
-void checkShader(unsigned int shader, const char * message) {
+void checkShader(unsigned int shader, const char *message)
+{
 	int OK;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &OK);
-	if (!OK) {
+	if (!OK)
+	{
 		printf("%s!\n", message);
 		getErrorInfo(shader);
 	}
 }
 
-void checkLinking(unsigned int program) {
+void checkLinking(unsigned int program)
+{
 	int OK;
 	glGetProgramiv(program, GL_LINK_STATUS, &OK);
-	if (!OK) {
+	if (!OK)
+	{
 		printf("Failed to link shader program!\n");
 		getErrorInfo(program);
 	}
 }
 
-const char * vertexSource = R"(
+const char *vertexSource = R"(
 	#version 330
 	precision highp float;
 
@@ -61,7 +67,7 @@ const char * vertexSource = R"(
 	}
 )";
 
-const char * fragmentSource = R"(
+const char *fragmentSource = R"(
 	#version 330
 	precision highp float;
 	
@@ -73,33 +79,34 @@ const char * fragmentSource = R"(
 	}
 )";
 
-unsigned int shaderProgram; 
-unsigned int vao; 
+unsigned int shaderProgram;
+unsigned int vao;
 
-void onInitialization() {
+void onInitialization()
+{
 	glViewport(0, 0, windowWidth, windowHeight);
 
-	glGenVertexArrays(1, &vao);	
-	glBindVertexArray(vao);		
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 
 	unsigned int vbo;
-	glGenBuffers(1, &vbo); 
+	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	
-	float vertices[] = { -0.8, -0.8, -0.6, 1.0, 0.8, -0.2 };
-	glBufferData(GL_ARRAY_BUFFER, 	
-				 sizeof(vertices),  
-				 vertices,	      	
-				 GL_STATIC_DRAW);	
-	
-	glEnableVertexAttribArray(0);  
-	glVertexAttribPointer(0,       
-						  2, GL_FLOAT, GL_FALSE, 
-						  0, NULL); 		     
 
-	
+	float vertices[] = {-0.8, -0.8, -0.6, 1.0, 0.8, -0.2};
+	glBufferData(GL_ARRAY_BUFFER,
+				 sizeof(vertices),
+				 vertices,
+				 GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0,
+						  2, GL_FLOAT, GL_FALSE,
+						  0, NULL);
+
 	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	if (!vertexShader) {
+	if (!vertexShader)
+	{
 		printf("Error in vertex shader creation\n");
 		exit(1);
 	}
@@ -107,9 +114,9 @@ void onInitialization() {
 	glCompileShader(vertexShader);
 	checkShader(vertexShader, "Vertex shader error");
 
-	
 	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	if (!fragmentShader) {
+	if (!fragmentShader)
+	{
 		printf("Error in fragment shader creation\n");
 		exit(1);
 	}
@@ -117,80 +124,84 @@ void onInitialization() {
 	glCompileShader(fragmentShader);
 	checkShader(fragmentShader, "Fragment shader error");
 
-	
 	shaderProgram = glCreateProgram();
-	if (!shaderProgram) {
+	if (!shaderProgram)
+	{
 		printf("Error in shader program creation\n");
 		exit(1);
 	}
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 
-	
-	glBindFragDataLocation(shaderProgram, 0, "fragmentColor");	
+	glBindFragDataLocation(shaderProgram, 0, "fragmentColor");
 
-	
 	glLinkProgram(shaderProgram);
 	checkLinking(shaderProgram);
-	
+
 	glUseProgram(shaderProgram);
 }
 
-void onDisplay() {
-	glClearColor(0, 0, 0, 0);     
-	glClear(GL_COLOR_BUFFER_BIT); 
+void onDisplay()
+{
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
 
-	
 	int location = glGetUniformLocation(shaderProgram, "color");
-	glUniform3f(location, 0.0f, 1.0f, 0.0f); 
+	glUniform3f(location, 0.0f, 1.0f, 0.0f);
 
-	float MVPtransf[4][4] = { 1, 0, 0, 0,    
-							  0, 1, 0, 0,    
-							  0, 0, 1, 0,
-							  0, 0, 0, 1 };
+	float MVPtransf[4][4] = {1, 0, 0, 0,
+							 0, 1, 0, 0,
+							 0, 0, 1, 0,
+							 0, 0, 0, 1};
 
 	location = glGetUniformLocation(shaderProgram, "MVP");
 	glUniformMatrix4fv(location, 1, GL_TRUE, &MVPtransf[0][0]);
 
-	glBindVertexArray(vao);  
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	glutSwapBuffers(); 
+	glutSwapBuffers();
 }
 
-void onKeyboard(unsigned char key, int pX, int pY) {
-	if (key == 'd') glutPostRedisplay();         
+void onKeyboard(unsigned char key, int pX, int pY)
+{
+	if (key == 'd')
+		glutPostRedisplay();
 }
 
-void onKeyboardUp(unsigned char key, int pX, int pY) {
+void onKeyboardUp(unsigned char key, int pX, int pY)
+{
 }
 
-void onMouseMotion(int pX, int pY) {
+void onMouseMotion(int pX, int pY)
+{
 }
 
-void onMouse(int button, int state, int pX, int pY) {
+void onMouse(int button, int state, int pX, int pY)
+{
 }
 
-
-void onIdle() {
+void onIdle()
+{
 }
 
-int main(int argc, char * argv[]) {
+int main(int argc, char *argv[])
+{
 	glutInit(&argc, argv);
 #if !defined(__APPLE__)
 	glutInitContextVersion(majorVersion, minorVersion);
 #endif
-	glutInitWindowSize(windowWidth, windowHeight);				
-	glutInitWindowPosition(100, 100);							
+	glutInitWindowSize(windowWidth, windowHeight);
+	glutInitWindowPosition(100, 100);
 #if defined(__APPLE__)
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_3_3_CORE_PROFILE);  
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_3_3_CORE_PROFILE);
 #else
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 #endif
 	glutCreateWindow(argv[0]);
 
 #if !defined(__APPLE__)
-	glewExperimental = true;	
+	glewExperimental = true;
 	glewInit();
 #endif
 
@@ -204,7 +215,7 @@ int main(int argc, char * argv[]) {
 
 	onInitialization();
 
-	glutDisplayFunc(onDisplay);                
+	glutDisplayFunc(onDisplay);
 	glutMouseFunc(onMouse);
 	glutIdleFunc(onIdle);
 	glutKeyboardFunc(onKeyboard);
